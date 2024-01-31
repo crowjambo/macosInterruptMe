@@ -1,59 +1,44 @@
-//
-//  ContentView.swift
-//  crowAlerts
-//
-//  Created by Evaldas Paulauskas on 30/01/2024.
-//
-
 import SwiftUI
-import SwiftData
+
+//force sleep now
+//let task = Process()
+//task.launchPath = "/usr/bin/env"
+//task.arguments = ["pmset", "sleepnow"]
+//task.launch()
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var isAlertVisible = false
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        ZStack {
+            if isAlertVisible {
+                Color.red
+                    .opacity(0.7)
+                    .ignoresSafeArea()
+                    .overlay(
+                        VStack {
+                            Text("This is a Full-Screen Alert!")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .padding()
+
+                            Button("Dismiss") {
+                                isAlertVisible.toggle()
+                            }
+                            .font(.headline)
+                            .padding(.top, 20)
+                        }
+                    )
+                    .onAppear {
+                        NSApp.activate(ignoringOtherApps: true)
                     }
-                }
-                .onDelete(perform: deleteItems)
             }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            .toolbar {
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+        .onAppear {
+            // Start a timer to trigger the alert after a set amount of seconds (e.g., 5 seconds)
+            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+                isAlertVisible = true
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
